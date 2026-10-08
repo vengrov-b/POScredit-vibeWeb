@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Онлайн-кредитование | Прототип</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 1.8rem; margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 24px; font-size: 0.95rem; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e8e8e8;
+        }
+
+        .form-group { margin-bottom: 14px; }
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 4px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+        }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4a6cf7;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+        button:hover { background: #3b5ae0; }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 10px;
+            display: none;
+        }
+        .result-box.approved {
+            background: #e6f9ed;
+            border: 1px solid #a3e4b8;
+        }
+        .result-box.rejected {
+            background: #fdeaea;
+            border: 1px solid #f5b7b7;
+        }
+        .result-box h3 { font-size: 1.2rem; margin-bottom: 8px; }
+        .result-box .prob { font-size: 2rem; font-weight: 700; }
+
+        .explanation { margin-top: 12px; }
+        .explanation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .pos { color: #1a8a4a; font-weight: 600; }
+        .neg { color: #c0392b; font-weight: 600; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat-card {
+            background: #f8f9fc;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #4a6cf7;
+        }
+        .stat-card .label {
+            font-size: 0.78rem;
+            color: #777;
+            margin-top: 2px;
+        }
+
+        .bar-chart { margin-top: 12px; }
+        .bar-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        .bar-label { width: 80px; color: #555; }
+        .bar-track {
+            flex: 1;
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 8px;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.4s;
+        }
+        .bar-value { width: 50px; text-align: right; font-weight: 600; }
+
+        .note {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏦 Онлайн-кредитование: прототип</h1>
+    <p class="subtitle">Мгновенное решение по кредиту на основе ML-скоринга</p>
+
+    <div class="grid">
+        <!-- ЛЕВАЯ КОЛОНКА: Форма -->
+        <div class="card">
+            <h2>📝 Заявка на кредит</h2>
+            <form id="loanForm">
+                <div class="row">
+                    <div class="form-group">
+                        <label>Возраст</label>
+                        <input type="number" name="age" value="30" min="18" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Годовой доход ($)</label>
+                        <input type="number" name="income" value="50000" min="0" step="1000" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Стаж работы (лет)</label>
+                        <input type="number" name="employment_years" value="5" min="0" max="50" step="0.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Кредитный рейтинг (FICO)</label>
+                        <input type="number" name="credit_score" value="700" min="300" max="850" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Сумма кредита ($)</label>
+                        <input type="number" name="loan_amount" value="10000" min="1" step="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Срок (мес.)</label>
+                        <input type="number" name="loan_term_months" value="24" min="1" max="360" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Текущих кредитов</label>
+                        <input type="number" name="existing_loans" value="1" min="0" max="20" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Иждивенцев</label>
+                        <input type="number" name="num_dependents" value="0" min="0" max="10" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Статус занятости</label>
+                        <select name="employment_status" required>
+                            <option value="employed">Работающий</option>
+                            <option value="self-employed">Самозанятый</option>
+                            <option value="unemployed">Безработный</option>
+                            <option value="retired">Пенсионер</option>
+                            <option value="student">Студент</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Семейное положение</label>
+                        <select name="marital_status" required>
+                            <option value="single">Холост/Не замужем</option>
+                            <option value="married">Женат/Замужем</option>
+                            <option value="divorced">Разведен(а)</option>
+                            <option value="widowed">Вдовец/Вдова</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="has_criminal_record"> Судимости
+                    </label>
+                </div>
+                <button type="submit">🚀 Получить решение</button>
+            </form>
+
+            <div id="resultBox" class="result-box">
+                <h3 id="resultTitle"></h3>
+                <div class="prob" id="resultProb"></div>
+                <div id="resultDetails"></div>
+                <div class="explanation" id="resultExplanation"></div>
+            </div>
+        </div>
+
+        <!-- ПРАВАЯ КОЛОНКА: Статистика -->
+        <div class="card">
+            <h2>📊 Статистика одобрений</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="value" id="statTotal">0</div>
+                    <div class="label">Всего заявок</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="statApproved">0</div>
+                    <div class="label">Одобрено</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="statRate">0%</div>
+                    <div class="label">Уровень одобрения</div>
+                </div>
+            </div>
+
+            <h3 style="font-size:0.95rem; margin:16px 0 8px; color:#555;">По уровню дохода</h3>
+            <div class="bar-chart" id="incomeChart"></div>
+
+            <h3 style="font-size:0.95rem; margin:16px 0 8px; color:#555;">Последние решения</h3>
+            <div id="recentList" style="font-size:0.85rem; color:#666;"></div>
+
+            <div class="note">
+                ⚠️ Это демонстрационный прототип. Реальная система требует:
+                обучения на исторических данных, мониторинга дрейфа,
+                аудита справедливости и соответствия регуляторным нормам.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('loanForm');
+    const resultBox = document.getElementById('resultBox');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const payload = {
+            age: parseInt(fd.get('age')),
+            income: parseFloat(fd.get('income')),
+            employment_years: parseFloat(fd.get('employment_years')),
+            credit_score: parseInt(fd.get('credit_score')),
+            loan_amount: parseFloat(fd.get('loan_amount')),
+            loan_term_months: parseInt(fd.get('loan_term_months')),
+            existing_loans: parseInt(fd.get('existing_loans')),
+            num_dependents: parseInt(fd.get('num_dependents')),
+            employment_status: fd.get('employment_status'),
+            marital_status: fd.get('marital_status'),
+            has_criminal_record: fd.get('has_criminal_record') === 'on',
+        };
+
+        try {
+            const res = await fetch('/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error('Ошибка сервера');
+            const data = await res.json();
+            showResult(data);
+            await refreshStats();
+        } catch (err) {
+            alert('Ошибка: ' + err.message);
+        }
+    });
+
+    function showResult(data) {
+        resultBox.style.display = 'block';
+        resultBox.className = 'result-box ' + (data.approved ? 'approved' : 'rejected');
+        document.getElementById('resultTitle').textContent =
+            data.approved ? '✅ ' + data.decision : '❌ ' + data.decision;
+        document.getElementById('resultProb').textContent =
+            'Вероятность одобрения: ' + (data.approval_probability * 100).toFixed(1) + '%';
+        document.getElementById('resultDetails').innerHTML =
+            `<div style="margin-top:8px;font-size:0.9rem;color:#555;">
+                DTI: <strong>${(data.dti * 100).toFixed(1)}%</strong>
+                ${data.approved ? ' | Рекомендуемый лимит: <strong>$' + data.recommended_limit.toLocaleString() + '</strong>' : ''}
+            </div>`;
+
+        const exp = data.explanation;
+        const keys = Object.keys(exp);
+        let html = '<div style="margin-top:12px;font-size:0.85rem;color:#666;">Ключевые факторы:</div>';
+        keys.forEach(k => {
+            const v = exp[k];
+            const cls = v >= 0 ? 'pos' : 'neg';
+            const sign = v >= 0 ? '+' : '';
+            html += `<div class="explanation-item">
+                <span>${k}</span>
+                <span class="${cls}">${sign}${v.toFixed(3)}</span>
+            </div>`;
+        });
+        document.getElementById('resultExplanation').innerHTML = html;
+    }
+
+    async function refreshStats() {
+        const res = await fetch('/api/stats');
+        const s = await res.json();
+
+        document.getElementById('statTotal').textContent = s.total_applications;
+        document.getElementById('statApproved').textContent = s.total_approved;
+        document.getElementById('statRate').textContent =
+            (s.overall_approval_rate * 100).toFixed(1) + '%';
+
+        // Bar chart по доходу
+        const chart = document.getElementById('incomeChart');
+        chart.innerHTML = '';
+        const order = ['<30k', '30k-60k', '60k-100k', '>100k'];
+        order.forEach(bucket => {
+            const d = s.by_income_bucket[bucket] || { total: 0, approved: 0 };
+            const rate = d.total > 0 ? d.approved / d.total : 0;
+            const pct = (rate * 100).toFixed(0);
+            const width = rate * 100;
+            const color = rate > 0.6 ? '#1a8a4a' : rate > 0.3 ? '#e6a817' : '#c0392b';
+            chart.innerHTML += `
+                <div class="bar-row">
+                    <span class="bar-label">${bucket}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width:${width}%;background:${color};"></div>
+                    </div>
+                    <span class="bar-value">${pct}% (${d.approved}/${d.total})</span>
+                </div>`;
+        });
+
+        // Последние решения
+        const recent = document.getElementById('recentList');
+        recent.innerHTML = s.recent_decisions.map(d =>
+            `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f0f0f0;">
+                <span>${d.timestamp.slice(11, 19)}</span>
+                <span style="color:${d.approved ? '#1a8a4a' : '#c0392b'};font-weight:600;">
+                    ${d.approved ? 'Одобрено' : 'Отказано'}
+                </span>
+                <span>${(d.probability * 100).toFixed(1)}%</span>
+            </div>`
+        ).join('') || '<span style="color:#aaa;">Пока нет решений</span>';
+    }
+
+    // Первоначальная загрузка
+    refreshStats();
+</script>
+</body>
+</html>
