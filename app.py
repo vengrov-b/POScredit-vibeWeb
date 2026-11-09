@@ -68,29 +68,59 @@ def generate_applications(seed):
 
 df = generate_applications(st.session_state.seed)
 
-# --- БОКОВАЯ ПАНЕЛЬ (ВОЗВРАТ К ВКЛАДКАМ) ---
+# --- БОКОВАЯ ПАНЕЛЬ (С ПОДСКАЗКАМИ) ---
 st.sidebar.title("Настройки")
-# Возвращаем аккуратные вкладки
 tab1, tab2 = st.sidebar.tabs(["⚙️ Параметры", "🎲 Данные"])
 
 with tab1:
     st.markdown("**Лимиты портфеля**")
-    C_max = st.slider("Дневной лимит (₽)", min_value=100000, max_value=5000000, value=1000000, step=100000)
-    theta_high = st.slider("Доля высокорисковых", 0.0, 1.0, 0.20, 0.05)
-    L_high = st.slider("Порог крупной суммы (₽)", min_value=50000, max_value=500000, value=150000, step=10000)
+
+    C_max = st.slider(
+        "Дневной лимит (₽)",
+        min_value=100000, max_value=5000000, value=1000000, step=100000,
+        help="Максимальная сумма, которую банк может выдать за день. Если лимит закончится, все последующие заявки будут отклонены."
+    )
+
+    theta_high = st.slider(
+        "Доля высокорисковых", 0.0, 1.0, 0.20, 0.05,
+        help="Максимально допустимая доля крупных кредитов в портфеле. Защищает банк от концентрации риска в крупных сделках."
+    )
+
+    L_high = st.slider(
+        "Порог крупной суммы (₽)", min_value=50000, max_value=500000, value=150000, step=10000,
+        help="Сумма, начиная с которой кредит считается крупным (рискованным). Рекомендуется ставить на уровне топ-20% заявок."
+    )
 
     st.markdown("**Резервирование**")
-    reserve_pct = st.slider("Резерв для крупных (%)", min_value=0, max_value=50, value=20, step=5)
+    reserve_pct = st.slider(
+        "Резерв для крупных (%)", min_value=0, max_value=50, value=20, step=5,
+        help="Процент дневного лимита, который запрещено тратить на мелкие заявки. Позволяет оставить деньги для выгодных крупных клиентов в конце дня."
+    )
 
     with st.expander("📈 Экономика кредита"):
-        r = st.number_input("Ставка (r)", value=0.15, step=0.01)
-        T_months = st.number_input("Срок (мес.)", value=12, step=1)
-        gamma = st.slider("Возврат при дефолте (γ)", 0.0, 1.0, 0.20, 0.05)
-        C_op = st.number_input("Опер. расходы (₽)", value=3000, step=500)
+        r = st.number_input(
+            "Ставка (r)", value=0.15, step=0.01,
+            help="Годовая процентная ставка по кредиту."
+        )
+        T_months = st.number_input(
+            "Срок (мес.)", value=12, step=1,
+            help="Срок кредитования в месяцах."
+        )
+        gamma = st.slider(
+            "Возврат при дефолте (γ)", 0.0, 1.0, 0.20, 0.05,
+            help="Доля тела кредита, которую банк сможет вернуть при дефолте (через суд или залог)."
+        )
+        C_op = st.number_input(
+            "Опер. расходы (₽)", value=3000, step=500,
+            help="Стоимость оформления одной заявки (запросы в БКИ, комиссия магазина)."
+        )
 
 with tab2:
     st.markdown("**Генерация потока заявок**")
-    seed_input = st.number_input("Сид (Seed):", min_value=0, max_value=999999, value=st.session_state.seed, step=1)
+    seed_input = st.number_input(
+        "Сид (Seed):", min_value=0, max_value=999999, value=st.session_state.seed, step=1,
+        help="Введите число, чтобы воспроизвести конкретный поток заявок. Одинаковый сид всегда генерирует одни и те же данные."
+    )
     if seed_input != st.session_state.seed:
         st.session_state.seed = seed_input
         st.rerun()
@@ -201,14 +231,13 @@ with col_b4:
 
 st.markdown("---")
 
-# === ГРАФИКИ (Компоновка 2/3 на 1/3, как вы просили ранее) ===
+# === ГРАФИКИ ===
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
-    st.markdown(f"**Поток заявок во времени (волны). Текущий сид: `{st.session_state.seed}`**")
+    st.markdown(f"**Поток заявок волнами в течении дня. Текущий сид: `{st.session_state.seed}`**")
     fig1, ax1 = plt.subplots(figsize=(10, 3.5), dpi=100)
 
-    # Используем аккуратные точки размера 15-20, как было в удачном дизайне
     colors = ['#ff4b4b' if amt >= L_high else '#1f77b4' for amt in df['requested_amount']]
     ax1.scatter(df['id'], df['requested_amount'] / 1000, c=colors, s=20, alpha=0.7)
 
@@ -253,22 +282,53 @@ with col_right:
 # === РЕЗУЛЬТАТЫ ===
 st.subheader("Результаты модели")
 strategy = st.session_state.current_strategy
-results_df, total_issued, total_profit, avg_loan, exec_time = process_applications(df, strategy, C_max, theta_high,
-                                                                                   L_high, reserve_pct)
+results_df, total_issued, total_profit, avg_loan, exec_time = process_applications(df, strategy, C_max, theta_high, L_high, reserve_pct)
 
-col1, col2, col3, col4, col5 = st.columns(5)
-col1.metric("Ожидаемая прибыль", f"{total_profit:,.0f} ₽")
-col2.metric("Использовано лимита", f"{format_money(total_issued)} / {format_money(C_max)}")
-col3.metric("Одобрено заявок", f"{(results_df['decision'] == 'Одобрено').sum()} / {len(df)}")
-col4.metric("Средняя сумма кредита", f"{avg_loan:,.0f} ₽")
-col5.metric("Время на заявку", f"{exec_time:.3f} мс")
+metrics_html = f"""
+<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+    <div style="flex: 1; min-width: 130px;">
+        <div style="font-size: 1rem; color: #888; margin-bottom: 5px;">Ожидаемая прибыль</div>
+        <div style="font-size: 2.0rem; font-weight: 600; line-height: 1.2;">{total_profit:,.0f} ₽</div>
+    </div>
+    <div style="flex: 1.5; min-width: 180px;">
+        <div style="font-size: 1rem; color: #888; margin-bottom: 5px;">Использовано лимита</div>
+        <div style="font-size: 2.0rem; font-weight: 600; line-height: 1.2;">{format_money(total_issued)} <span style="font-size: 1.3rem; color: #888;">/ {format_money(C_max)}</span></div>
+    </div>
+    <div style="flex: 1; min-width: 120px;">
+        <div style="font-size: 1rem; color: #888; margin-bottom: 5px;">Одобрено заявок</div>
+        <div style="font-size: 2.0rem; font-weight: 600; line-height: 1.2;">{(results_df['decision'] == 'Одобрено').sum()} / {len(df)}</div>
+    </div>
+    <div style="flex: 1; min-width: 130px;">
+        <div style="font-size: 1rem; color: #888; margin-bottom: 5px;">Средняя сумма</div>
+        <div style="font-size: 2.0rem; font-weight: 600; line-height: 1.2;">{avg_loan:,.0f} ₽</div>
+    </div>
+    <div style="flex: 1; min-width: 120px;">
+        <div style="font-size: 1rem; color: #888; margin-bottom: 5px;">Время на заявку</div>
+        <div style="font-size: 2.0rem; font-weight: 600; line-height: 1.2;">{exec_time:.3f} <span style="font-size: 1.3rem; color: #888;">мс</span></div>
+    </div>
+</div>
+"""
+
+st.markdown(metrics_html, unsafe_allow_html=True)
+# ------------------------------------
 
 st.progress(min(total_issued / C_max, 1.0))
 
 st.subheader(f"Журнал решений")
-st.dataframe(
-    results_df.style.applymap(lambda x: 'background-color: #d4edda' if x == 'Одобрено' else 'background-color: #f8d7da',
-                              subset=['decision']), use_container_width=True)
+
+# Функция для покраски ячеек с ярким фоном и черным текстом
+def highlight_decision(val):
+    if val == 'Одобрено':
+        return 'background-color: #85e085; color: black; font-weight: bold;'
+    elif val == 'Отказано':
+        return 'background-color: #ff9999; color: black; font-weight: bold;'
+    return ''
+
+# Применяем стиль только к колонке decision
+styled_df = results_df.style.applymap(highlight_decision, subset=['decision'])
+
+# Выводим таблицу
+st.dataframe(styled_df, use_container_width=True)
 
 csv = results_df.to_csv(index=False).encode('utf-8')
-st.download_button("📥 Скачать решения (CSV)", csv, f"decisions_seed_{st.session_state.seed}.csv", "text/csv")
+st.download_button("Скачать решения (CSV)", csv, f"decisions_seed_{st.session_state.seed}.csv", "text/csv")
