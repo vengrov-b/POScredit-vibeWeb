@@ -10,7 +10,7 @@
 * Matplotlib (визуализация)
 
 
-# Запуск:
+## Запуск:
 
 python -m venv venv
 .\venv\Scripts\activate
@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 streamlit run app.py
 
-# Удачные сиды:
+## Удачные сиды:
 161023
 
 368551
