@@ -1,8 +1,7 @@
 # Прототип СППР для онлайн-одобрения POS-кредитов
 
 [![tests](https://img.shields.io/badge/tests-14%20passed-brightgreen)](#тесты)
-[![python](https://img.shields.io/badge/python-3.11-blue)](https://python.org)
-[![license](https://img.shields.io/badge/license-MIT-lightgrey)](#)
+[![python](https://img.shields.io/badge/python-3.13-blue)](https://python.org)
 
 Демонстрационный прототип оптимизационной модели онлайн-принятия решений
 в POS-кредитовании с портфельными ограничениями (дневной лимит, доля
@@ -70,19 +69,15 @@ streamlit run app.py
 
 ```
 
-
 # Памятка для загрузки на гитхаб:
-
 1. Подготовить все измененные файлы к отправке
 ```bash
  git add .
 ```
-
 2. Зафиксировать изменения с комментарием
 ```bash
 git commit -m "Обновление интерфейса: изменены шрифты метрик и исправлена кнопка скачивания"
 ```
-
 3. Отправить на GitHub
 ```bash
 git push
